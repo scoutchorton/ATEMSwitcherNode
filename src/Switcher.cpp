@@ -84,7 +84,7 @@ NAN_METHOD(Switcher::Connect) {
 	BMDSwitcherConnectToFailure connectionFailure;
 	HRESULT connectionResult = thisSwitcher->discovery->ConnectTo(_com_util::ConvertStringToBSTR(addressString.c_str()), &(thisSwitcher->switcher), &connectionFailure);
 	if(FAILED(connectionResult)) {
-		switch (connectionFailure) {
+		switch(connectionFailure) {
 			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureCorruptData:
 				return Nan::ThrowError("Connection Failure: Corrupt data received.");
 			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureIncompatibleFirmware:

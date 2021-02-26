@@ -5,10 +5,10 @@
   "main": "build/Release/ATEMSwitcherNode.node",
   "scripts": {
     "start": "node test.js",
-    "build:dev": "node-gyp -j 16 build --debug",
-    "build": "node-gyp -j 16 build",
-    "rebuild:dev": "node-gyp -j 16 rebuild --debug",
-    "rebuild": "node-gyp -j 16 rebuild",
+    "build:dev": "node-gyp build --debug",
+    "build": "node-gyp build",
+    "rebuild:dev": "node-gyp rebuild --debug",
+    "rebuild": "node-gyp rebuild",
     "clean": "node-gyp clean"
   },
   "author": "",
