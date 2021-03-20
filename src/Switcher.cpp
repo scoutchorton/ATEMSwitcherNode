@@ -24,6 +24,7 @@ NAN_MODULE_INIT(Switcher::Init) {
 	Nan::SetPrototypeMethod(SwitcherNew, "auto", Auto);
 	Nan::SetPrototypeMethod(SwitcherNew, "cut", Cut);
 	Nan::SetPrototypeMethod(SwitcherNew, "fadeToBlack", FadeToBlack);
+	Nan::SetPrototypeMethod(SwitcherNew, "getInputs", GetInputs);
 
 	//Class properties
 	SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "address", Nan::New("129.168.10.240").ToLocalChecked());
@@ -41,7 +42,7 @@ NAN_METHOD(Switcher::New) {
 	Switcher* switcher = new Switcher();
 
 	//Only allow as 'new Switcher()' and not 'Switcher()'
-	if (!info.IsConstructCall())
+	if(!info.IsConstructCall())
 		return Nan::ThrowError("Please use the 'new' operator.");
 
 
@@ -85,20 +86,20 @@ NAN_METHOD(Switcher::Connect) {
 	HRESULT connectionResult = thisSwitcher->discovery->ConnectTo(_com_util::ConvertStringToBSTR(addressString.c_str()), &(thisSwitcher->switcher), &connectionFailure);
 	if(FAILED(connectionResult)) {
 		switch(connectionFailure) {
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureCorruptData:
-				return Nan::ThrowError("Connection Failure: Corrupt data received.");
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureIncompatibleFirmware:
-				return Nan::ThrowError("Connection Failure: Incompatable firmware.");
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureNoResponse:
-				return Nan::ThrowError("Connection Failure: No response.");
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureStateSync:
-				return Nan::ThrowError("Connection Failure: Unable to synchronise state with Switcher.");
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureStateSyncTimedOut:
-				return Nan::ThrowError("Connection Failure: Unable to synchronize state due to timing out.");
-			case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureDeprecatedAfter_v7_3:
-				return Nan::ThrowError("Connection Failure: Deprecated failure.");
-			default:
-				return Nan::ThrowError("Connection Failure: Unknown reason for failure.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureCorruptData:
+			return Nan::ThrowError("Connection Failure: Corrupt data received.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureIncompatibleFirmware:
+			return Nan::ThrowError("Connection Failure: Incompatable firmware.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureNoResponse:
+			return Nan::ThrowError("Connection Failure: No response.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureStateSync:
+			return Nan::ThrowError("Connection Failure: Unable to synchronise state with Switcher.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureStateSyncTimedOut:
+			return Nan::ThrowError("Connection Failure: Unable to synchronize state due to timing out.");
+		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureDeprecatedAfter_v7_3:
+			return Nan::ThrowError("Connection Failure: Deprecated failure.");
+		default:
+			return Nan::ThrowError("Connection Failure: Unknown reason for failure.");
 		}
 	}
 
@@ -119,7 +120,7 @@ NAN_METHOD(Switcher::Auto) {
 	IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
 	HRESULT iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
 	if(FAILED(iteratorResult)) {
-		switch (iteratorResult) {
+		switch(iteratorResult) {
 		case E_POINTER:
 			return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
 		case E_OUTOFMEMORY:
@@ -157,7 +158,7 @@ NAN_METHOD(Switcher::Cut) {
 	IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
 	HRESULT iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
 	if(FAILED(iteratorResult)) {
-		switch (iteratorResult) {
+		switch(iteratorResult) {
 		case E_POINTER:
 			return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
 		case E_OUTOFMEMORY:
@@ -177,7 +178,7 @@ NAN_METHOD(Switcher::Cut) {
 
 	//Do transition
 	HRESULT autoResult = mixBlock->PerformCut();
-	if (FAILED(autoResult))
+	if(FAILED(autoResult))
 		return Nan::ThrowError("Cut Transition: Failed to perform transition.");
 
 	//End code
@@ -190,7 +191,6 @@ NAN_METHOD(Switcher::FadeToBlack) {
 
 	//Get Switcher instance
 	Switcher* thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
-
 
 	//Create mix block iterator if not existant
 	IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
@@ -211,16 +211,67 @@ NAN_METHOD(Switcher::FadeToBlack) {
 	//Create mix effect block
 	IBMDSwitcherMixEffectBlock* mixBlock = NULL;
 	HRESULT mixBlockResult = mixBlockIterator->Next(&mixBlock);
-	if (FAILED(mixBlockResult))
+	if(FAILED(mixBlockResult))
 		return Nan::ThrowError("Mix Effect Block: Failed to create.");
 
 	//Do transition
 	HRESULT autoResult = mixBlock->PerformFadeToBlack();
-	if (FAILED(autoResult))
+	if(FAILED(autoResult))
 		return Nan::ThrowError("Fade to Black: Failed to perform fade to black.");
 
 	//End code
-	info.GetReturnValue().Set(Nan::True());
+	info.GetReturnValue().Set(Nan::Undefined());
+}
+
+NAN_METHOD(Switcher::GetInputs) {
+	//Variables
+	v8::Local<v8::Context> context;
+	Switcher* thisSwitcher;
+	HRESULT result;
+	IBMDSwitcherInputIterator* inputIterator;
+	IBMDSwitcherInput* input;
+	BSTR sname;
+	BSTR lname;
+	
+	//Get context of the funcation
+	context = info.GetIsolate()->GetCurrentContext();
+
+	//Get Switcher instance
+	thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+
+	//Create input iterator if not existant
+	result = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherInputIterator, (LPVOID*)&inputIterator);
+	if(FAILED(result)) {
+		switch(result) {
+		case E_POINTER:
+			return Nan::ThrowError("Input Iterator: Invalid pointer.");
+		case E_OUTOFMEMORY:
+			return Nan::ThrowError("Input Iterator: Not enough memory.");
+		case E_NOINTERFACE:
+			return Nan::ThrowError("Input Iterator: Interface not found.");
+		default:
+			return Nan::ThrowError("Input Iterator: Invalid pointer.");
+		}
+	}
+
+	/**
+	 * Iterate over all inputs, and make a JS array to store information about them.
+	 * Make a custom class for inputs?
+	 */
+
+	//Iterate over inputs and get names
+	result = inputIterator->Next(&input);
+	if(result == E_POINTER) {
+		return Nan::ThrowError("Input Iteration: Invalid pointer.");
+	}
+	for(; result != S_FALSE; result = inputIterator->Next(&input)) {
+		input->GetShortName(&sname);
+		input->GetLongName(&lname);
+		std::cout << "Input: " << _com_util::ConvertBSTRToString(sname) << " (" << _com_util::ConvertBSTRToString(lname) << ")" << std::endl;
+	}
+
+	 //End code
+	info.GetReturnValue().Set(Nan::Undefined());
 }
 
 NODE_MODULE(ATEMSwitcherNode, Switcher::Init);
