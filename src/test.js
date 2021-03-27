@@ -10,6 +10,7 @@ switcher.address = "192.168.100.155";
 switcher.connect();
 
 x = 0;
+//switcher.cut();
 /*
 let autoInterval = setInterval(() => {
     switcher.auto();
@@ -32,4 +33,5 @@ let autoInterval = setInterval(() => {
 }, 1500);
 */
 
-switcher.getInputs();
+console.log(JSON.stringify(switcher.getInputs()).replace('[', '[\n').replace(']', '\n]').split('},{').join('},\n  {'));
+//switcher.getInputs();

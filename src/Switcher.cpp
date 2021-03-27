@@ -62,11 +62,19 @@ NAN_METHOD(Switcher::New) {
 };
 
 NAN_METHOD(Switcher::Connect) {
+	//Variables
+	v8::Local<v8::Context> context;
+	Switcher* thisSwitcher;
+	v8::Local<v8::Value> addressValue;
+	std::string addressString;
+	BMDSwitcherConnectToFailure connectionFailure;
+	HRESULT connectionResult;
+
 	//Get context of function
-	v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+	context = info.GetIsolate()->GetCurrentContext();
 
 	//Get Switcher instance
-	Switcher* thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+	thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
 
 	//Parse arguments for address
 	if(info.Length() == 1) {
@@ -77,13 +85,12 @@ NAN_METHOD(Switcher::Connect) {
 	}
 
 	//Get values from JS class
-	v8::Local<v8::Value> addressValue = thisSwitcher->handle()->Get(context, Nan::New("address").ToLocalChecked()).ToLocalChecked();
-	std::string addressString(std::string(*v8::String::Utf8Value(info.GetIsolate(), addressValue)));
+	addressValue = thisSwitcher->handle()->Get(context, Nan::New("address").ToLocalChecked()).ToLocalChecked();
+	addressString = std::string(std::string(*v8::String::Utf8Value(info.GetIsolate(), addressValue)));
 	
 
 	//Attempt to connect to switcher
-	BMDSwitcherConnectToFailure connectionFailure;
-	HRESULT connectionResult = thisSwitcher->discovery->ConnectTo(_com_util::ConvertStringToBSTR(addressString.c_str()), &(thisSwitcher->switcher), &connectionFailure);
+	connectionResult = thisSwitcher->discovery->ConnectTo(_com_util::ConvertStringToBSTR(addressString.c_str()), &(thisSwitcher->switcher), &connectionFailure);
 	if(FAILED(connectionResult)) {
 		switch(connectionFailure) {
 		case BMDSwitcherConnectToFailure::bmdSwitcherConnectToFailureCorruptData:
@@ -148,15 +155,23 @@ NAN_METHOD(Switcher::Auto) {
 }
 
 NAN_METHOD(Switcher::Cut) {
+	//Variables
+	v8::Local<v8::Context> context;
+	Switcher* thisSwitcher;
+	IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
+	HRESULT iteratorResult;
+	IBMDSwitcherMixEffectBlock* mixBlock;
+	HRESULT mixBlockResult;
+	HRESULT autoResult;
+
 	//Get context of function
-	v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+	context = info.GetIsolate()->GetCurrentContext();
 
 	//Get Switcher instance
-	Switcher* thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+	thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
 
 	//Create mix block iterator if not existant
-	IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
-	HRESULT iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
+	iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
 	if(FAILED(iteratorResult)) {
 		switch(iteratorResult) {
 		case E_POINTER:
@@ -171,18 +186,18 @@ NAN_METHOD(Switcher::Cut) {
 	}
 
 	//Create mix effect block
-	IBMDSwitcherMixEffectBlock* mixBlock = NULL;
-	HRESULT mixBlockResult = mixBlockIterator->Next(&mixBlock);
+	mixBlock = NULL;
+	mixBlockResult = mixBlockIterator->Next(&mixBlock);
 	if(FAILED(mixBlockResult))
 		return Nan::ThrowError("Mix Effect Block: Failed to create.");
 
 	//Do transition
-	HRESULT autoResult = mixBlock->PerformCut();
+	autoResult = mixBlock->PerformCut();
 	if(FAILED(autoResult))
 		return Nan::ThrowError("Cut Transition: Failed to perform transition.");
 
 	//End code
-	info.GetReturnValue().Set(Nan::True());
+	info.GetReturnValue().Set(Nan::Undefined());
 }
 
 NAN_METHOD(Switcher::FadeToBlack) {
@@ -230,8 +245,8 @@ NAN_METHOD(Switcher::GetInputs) {
 	HRESULT result;
 	IBMDSwitcherInputIterator* inputIterator;
 	IBMDSwitcherInput* input;
-	BSTR sname;
-	BSTR lname;
+	v8::Local<v8::Array> inputArray;
+	v8::Local<v8::Object> inputObject;
 	
 	//Get context of the funcation
 	context = info.GetIsolate()->GetCurrentContext();
@@ -261,17 +276,191 @@ NAN_METHOD(Switcher::GetInputs) {
 
 	//Iterate over inputs and get names
 	result = inputIterator->Next(&input);
-	if(result == E_POINTER) {
+	if(result == E_POINTER)
 		return Nan::ThrowError("Input Iteration: Invalid pointer.");
-	}
+
+	//Add names to inputArray
+	inputArray = v8::Array::New(info.GetIsolate());
 	for(; result != S_FALSE; result = inputIterator->Next(&input)) {
-		input->GetShortName(&sname);
-		input->GetLongName(&lname);
-		std::cout << "Input: " << _com_util::ConvertBSTRToString(sname) << " (" << _com_util::ConvertBSTRToString(lname) << ")" << std::endl;
+		//Initalize variables
+		inputObject = v8::Object::New(info.GetIsolate());
+		BMDSwitcherInputId id;
+		BMDSwitcherPortType portType;
+		BMDSwitcherInputAvailability availability;
+		BSTR lname;
+		BSTR sname;
+		BOOL isDefault;
+		BOOL prgmTallied;
+		BOOL prvwTallied;
+		BMDSwitcherExternalPortType externPortTypes;
+
+		//Get and apply attributes
+		if(input->GetInputId(&id) == S_OK)
+			inputObject->Set(context, Nan::New("id").ToLocalChecked(), Nan::New(std::to_string(id)).ToLocalChecked());
+		else
+			inputObject->Set(context, Nan::New("id").ToLocalChecked(), Nan::Undefined());
+
+		if(input->GetPortType(&portType) == S_OK) {
+			switch(portType) {
+			case bmdSwitcherPortTypeExternal:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("External").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeBlack:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("Black").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeColorBars:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ColorBars").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeColorGenerator:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ColorGenerator").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeMediaPlayerFill:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MediaPlayerFill").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeMediaPlayerCut:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MediaPlayerCut").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeSuperSource:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("SuperSource").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeMixEffectBlockOutput:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MixEffectBlockOutput").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeAuxOutput:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("AuxOutput").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeKeyCutOutput:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("CutOutput").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeMultiview:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("Multiview").ToLocalChecked());
+				break;
+			case bmdSwitcherPortTypeExternalDirect:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ExternalDirect").ToLocalChecked());
+				break;
+			default:
+				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::Undefined());
+			}
+		} else
+			inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::Undefined());
+
+		if(input->GetInputAvailability(&availability) == S_OK) {
+			switch(availability) {
+			case bmdSwitcherInputAvailabilityMixEffectBlock0:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock0").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityMixEffectBlock1:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock1").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityMixEffectBlock2:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock2").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityMixEffectBlock3:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock3").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityAux1Output:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("Aux1Output").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityAux2Output:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("Aux2Output").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityAuxOutputs:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("AuxOutputs").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityMultiView:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MultiView").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilitySuperSourceArt:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("SuperSourceArt").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilitySuperSourceBox:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("SuperSourceBox").ToLocalChecked());
+				break;
+			case bmdSwitcherInputAvailabilityInputCut:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("InputCut").ToLocalChecked());
+				break;
+			default:
+				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::Undefined());
+			}
+		} else
+			inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::Undefined());
+
+		if(input->GetLongName(&sname) == S_OK)
+			inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(sname)).ToLocalChecked());
+		else
+			inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::Undefined());
+		
+		if(input->GetShortName(&lname) == S_OK)
+			inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(lname)).ToLocalChecked());
+		else
+			inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::Undefined());
+		
+		if(input->AreNamesDefault(&isDefault) == S_OK)
+			inputObject->Set(context, Nan::New("defaultNames").ToLocalChecked(), (isDefault) ? Nan::True() : Nan::False());
+		else
+			inputObject->Set(context, Nan::New("defaultNames").ToLocalChecked(), Nan::Undefined());
+		
+		if(input->IsProgramTallied(&prgmTallied) == S_OK)
+			inputObject->Set(context, Nan::New("programTallied").ToLocalChecked(), (prgmTallied) ? Nan::True() : Nan::False());
+		else
+			inputObject->Set(context, Nan::New("programTallied").ToLocalChecked(), Nan::Undefined());
+		
+		if(input->IsPreviewTallied(&prvwTallied) == S_OK)
+			inputObject->Set(context, Nan::New("previewTallied").ToLocalChecked(), (prvwTallied) ? Nan::True() : Nan::False());
+		else
+			inputObject->Set(context, Nan::New("previewTallied").ToLocalChecked(), Nan::Undefined());
+		
+		if(input->GetAvailableExternalPortTypes(&externPortTypes) == S_OK) {
+			switch(externPortTypes) {
+			case bmdSwitcherExternalPortTypeSDI:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("SDI").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeHDMI:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("HDMI").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeComponent:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Component").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeComposite:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Composite").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeSVideo:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("SVideo").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeInternal:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Internal").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeXLR:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("XLR").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeAESEBU:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("AESEBU").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeRCA:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("RCA").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeTSJack:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("TSJack").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeMADI:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("MADI").ToLocalChecked());
+				break;
+			case bmdSwitcherExternalPortTypeTRS:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("TRS").ToLocalChecked());
+				break;
+			default:
+				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::Undefined());
+			}
+		} else
+			inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::Undefined());
+
+		//Add to return array
+		inputArray->Set(context, inputArray->Length(), inputObject);
 	}
 
-	 //End code
-	info.GetReturnValue().Set(Nan::Undefined());
+
+	//End code
+	info.GetReturnValue().Set(inputArray);
 }
 
 NODE_MODULE(ATEMSwitcherNode, Switcher::Init);
