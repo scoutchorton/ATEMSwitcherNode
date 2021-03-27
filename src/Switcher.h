@@ -33,4 +33,4 @@ private:
 	IBMDSwitcher* switcher;
 };
 
-#endif
+#endif /* SWITCHER_H */

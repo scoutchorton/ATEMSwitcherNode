@@ -4,18 +4,20 @@
   "description": "",
   "main": "build/Release/ATEMSwitcherNode.node",
   "scripts": {
-    "start": "node test.js",
-    "build:dev": "node-gyp build --debug",
+    "start": "node .\\src\\test.js",
+    "configure": "node-gyp configure",
+    "configure:dev": "node-gyp configure --debug",
     "build": "node-gyp build",
-    "rebuild:dev": "node-gyp rebuild --debug",
+    "build:dev": "node-gyp build --debug",
     "rebuild": "node-gyp rebuild",
+    "rebuild:dev": "node-gyp rebuild --debug",
     "clean": "node-gyp clean"
   },
-  "author": "",
+  "author": "scoutchorton",
   "license": "ISC",
   "gypfile": true,
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "nan": "^2.14.2"
-  },
-  "devDependencies": {}
+  }
 }

@@ -33,5 +33,17 @@ let autoInterval = setInterval(() => {
 }, 1500);
 */
 
-console.log(JSON.stringify(switcher.getInputs()).replace('[', '[\n').replace(']', '\n]').split('},{').join('},\n  {'));
+//console.log(JSON.stringify(switcher.getInputs()).replace('[', '[\n').replace(']', '\n]').split('},{').join('},\n  {'));
+let inputs = switcher.getInputs();
+//console.log(inputs);
+let data = {'prgm': '', 'prvw': ''}
+for(let input of inputs) {
+    if(input.programTallied)
+        data.prgm = input.longName;
+    else if(input.previewTallied)
+        data.prvw = input.longName;
+}
+
+console.log(`Program: ${data.prgm}`);
+console.log(`Preview: ${data.prvw}`);
 //switcher.getInputs();

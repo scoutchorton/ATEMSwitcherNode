@@ -1,6 +1,7 @@
 #include "Switcher.h"
-#include <iostream>
+
 #include <comutil.h>
+#include <iostream>
 
 //https://medium.com/netscape/tutorial-building-native-c-modules-for-node-js-using-nan-part-1-755b07389c7c
 //https://v8docs.nodesource.com/node-12.19/d2/dc3/namespacev8.html
@@ -385,12 +386,12 @@ NAN_METHOD(Switcher::GetInputs) {
 		} else
 			inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::Undefined());
 
-		if(input->GetLongName(&sname) == S_OK)
+		if(input->GetShortName(&sname) == S_OK)
 			inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(sname)).ToLocalChecked());
 		else
 			inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::Undefined());
 		
-		if(input->GetShortName(&lname) == S_OK)
+		if(input->GetLongName(&lname) == S_OK)
 			inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(lname)).ToLocalChecked());
 		else
 			inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::Undefined());
