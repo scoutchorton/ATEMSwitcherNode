@@ -7,30 +7,34 @@
 #ifndef SWITCHER_H
 #define SWITCHER_H
 
-class Switcher : public Nan::ObjectWrap {
-public:
-	//Constructors
-	Switcher();
+namespace ATEMSwitcherNode {
+	NAN_MODULE_INIT(Init);
 
-	//Node module
-	static NAN_MODULE_INIT(Init);
-	static NAN_METHOD(New);
-	static Nan::Persistent<v8::Function> constructor;
+	class Switcher : public Nan::ObjectWrap {
+	public:
+		//Constructors
+		Switcher();
 
-	//Networking
-	static NAN_METHOD(Connect);
+		//Node module
+		static NAN_MODULE_INIT(Init);
+		static NAN_METHOD(New);
+		static Nan::Persistent<v8::Function> constructor;
 
-	//Transitions
-	static NAN_METHOD(Auto);
-	static NAN_METHOD(Cut);
-	static NAN_METHOD(FadeToBlack);
+		//Networking
+		static NAN_METHOD(Connect);
 
-	//Util
-	static NAN_METHOD(GetInputs);
+		//Transitions
+		static NAN_METHOD(Auto);
+		static NAN_METHOD(Cut);
+		static NAN_METHOD(FadeToBlack);
 
-private:
-	IBMDSwitcherDiscovery* discovery;
-	IBMDSwitcher* switcher;
-};
+		//Util
+		static NAN_METHOD(GetInputs);
+
+	private:
+		IBMDSwitcherDiscovery* discovery;
+		IBMDSwitcher* switcher;
+	};
+}
 
 #endif /* SWITCHER_H */
