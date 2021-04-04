@@ -288,22 +288,35 @@ namespace ATEMSwitcherNode {
 			return Nan::ThrowError("Input Iteration: Invalid pointer.");
 
 		//Add names to inputArray
-		/*
 		inputArray = v8::Array::New(info.GetIsolate());
 		for(; result != S_FALSE; result = inputIterator->Next(&input)) {
 			//Initalize variables
 			BMDSwitcherInputId id;
 			BMDSwitcherPortType portType;
-			BMDSwitcherInputAvailability availability;
+			BMDSwitcherInputAvailability avail;
 			BSTR lname;
 			BSTR sname;
 			BOOL isDefault;
 			BOOL prgmTallied;
 			BOOL prvwTallied;
 			BMDSwitcherExternalPortType externPortTypes;
+			enum inputArgValues {
+				id,
+				type,
+				availability,
+				shortName,
+				longName,
+				defaultNames,
+				previewTallied,
+				programTallied,
+				externalPortType,
+				inputArgC
+			};
+			v8::Local<v8::Value> inputArgs[inputArgC];
 
 			//Create an instance of an Input
-			inputObject = Nan::New(Input::constructor);
+			//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
+			inputObject = v8::Object::New(info.GetIsolate());
 
 			//Get and apply attributes
 			if(input->GetInputId(&id) == S_OK)
@@ -356,8 +369,8 @@ namespace ATEMSwitcherNode {
 			else
 				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::Undefined());
 
-			if(input->GetInputAvailability(&availability) == S_OK) {
-				switch(availability) {
+			if(input->GetInputAvailability(&avail) == S_OK) {
+				switch(avail) {
 				case bmdSwitcherInputAvailabilityMixEffectBlock0:
 					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock0").ToLocalChecked());
 					break;
@@ -467,17 +480,25 @@ namespace ATEMSwitcherNode {
 			}
 			else
 				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::Undefined());
+
+
+			/**
+			 * TODO:
+			 * ADD VALUES TO inputArgs TO THEN FORM AN INPUT OBJECT
+			 */
+
+			//Create an instance of an Input
+			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), inputArgC, inputArgs).ToLocalChecked();
 			
 			//Add to return array
 			inputArray->Set(context, inputArray->Length(), inputObject);
 		}
-		*/
 
 
 		//End code
-		//info.GetReturnValue().Set(inputArray);
-		inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
-		info.GetReturnValue().Set(inputObject3);
+		info.GetReturnValue().Set(inputArray);
+		//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
+		//info.GetReturnValue().Set(inputObject);
 	}
 
 	NODE_MODULE(ATEMSwitcherNode, Init);
