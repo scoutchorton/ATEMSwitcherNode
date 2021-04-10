@@ -247,6 +247,7 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::GetInputs) {
+
 		//Variables
 		v8::Local<v8::Context> context;
 		Switcher* thisSwitcher;
@@ -289,9 +290,10 @@ namespace ATEMSwitcherNode {
 
 		//Add names to inputArray
 		inputArray = v8::Array::New(info.GetIsolate());
+
 		for(; result != S_FALSE; result = inputIterator->Next(&input)) {
 			//Initalize variables
-			BMDSwitcherInputId id;
+			BMDSwitcherInputId inputId;
 			BMDSwitcherPortType portType;
 			BMDSwitcherInputAvailability avail;
 			BSTR lname;
@@ -300,187 +302,173 @@ namespace ATEMSwitcherNode {
 			BOOL prgmTallied;
 			BOOL prvwTallied;
 			BMDSwitcherExternalPortType externPortTypes;
-			enum inputArgValues {
-				id,
-				type,
-				availability,
-				shortName,
-				longName,
-				defaultNames,
-				previewTallied,
-				programTallied,
-				externalPortType,
-				inputArgC
-			};
-			v8::Local<v8::Value> inputArgs[inputArgC];
+			v8::Local<v8::Value> inputArgs[Input::inputArgc];
 
 			//Create an instance of an Input
-			//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
-			inputObject = v8::Object::New(info.GetIsolate());
-
+			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), inputArgc, inputArgs).ToLocalChecked();
+			//inputObject = v8::Object::New(info.GetIsolate());
+			
 			//Get and apply attributes
-			if(input->GetInputId(&id) == S_OK)
-				inputObject->Set(context, Nan::New("id").ToLocalChecked(), Nan::New(std::to_string(id)).ToLocalChecked());
+			//inputArgs[Input::id] = (input->GetInputId(&inputId) == S_OK) ? v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str()) : Nan::Undefined();
+			if(input->GetInputId(&inputId) == S_OK)
+				inputArgs[Input::id] = v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str(), v8::NewStringType::kNormal).ToLocalChecked();
 			else
-				inputObject->Set(context, Nan::New("id").ToLocalChecked(), Nan::Undefined());
+				inputArgs[Input::id] = Nan::Undefined();
 
 			if(input->GetPortType(&portType) == S_OK) {
 				switch(portType) {
 				case bmdSwitcherPortTypeExternal:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("External").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "External", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeBlack:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("Black").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Black", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeColorBars:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ColorBars").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorBars", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeColorGenerator:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ColorGenerator").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorGenerator", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMediaPlayerFill:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MediaPlayerFill").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerFill", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMediaPlayerCut:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MediaPlayerCut").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerCut", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeSuperSource:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("SuperSource").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSource", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMixEffectBlockOutput:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("MixEffectBlockOutput").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlockOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeAuxOutput:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("AuxOutput").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeKeyCutOutput:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("CutOutput").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "CutOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMultiview:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("Multiview").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Multiview", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeExternalDirect:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::New("ExternalDirect").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ExternalDirect", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				default:
-					inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::Undefined());
+					inputArgs[Input::externalPortType] = Nan::Undefined();
 				}
-			}
-			else
-				inputObject->Set(context, Nan::New("type").ToLocalChecked(), Nan::Undefined());
+			} else
+				inputArgs[Input::externalPortType] = Nan::Undefined();
 
 			if(input->GetInputAvailability(&avail) == S_OK) {
 				switch(avail) {
 				case bmdSwitcherInputAvailabilityMixEffectBlock0:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock0").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock0", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityMixEffectBlock1:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock1").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock1", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityMixEffectBlock2:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock2").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock2", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityMixEffectBlock3:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MixEffectBlock3").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock3", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityAux1Output:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("Aux1Output").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "Aux1Output", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityAux2Output:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("Aux2Output").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "Aux2Output", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityAuxOutputs:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("AuxOutputs").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutputs", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityMultiView:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("MultiView").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MultiView", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilitySuperSourceArt:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("SuperSourceArt").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceArt", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilitySuperSourceBox:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("SuperSourceBox").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceBox", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherInputAvailabilityInputCut:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::New("InputCut").ToLocalChecked());
+					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "InputCut", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				default:
-					inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::Undefined());
+					inputArgs[Input::availability] = Nan::Undefined();
 				}
-			}
-			else
-				inputObject->Set(context, Nan::New("availability").ToLocalChecked(), Nan::Undefined());
+			} else
+				inputArgs[Input::availability] = Nan::Undefined();
 
-			if(input->GetShortName(&sname) == S_OK)
-				inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(sname)).ToLocalChecked());
+			if((input->GetShortName(&sname) == S_OK))
+				inputArgs[Input::shortName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(sname), v8::NewStringType::kNormal).ToLocalChecked();
 			else
-				inputObject->Set(context, Nan::New("shortName").ToLocalChecked(), Nan::Undefined());
-
+				inputArgs[Input::shortName] = Nan::Undefined();
+			
 			if(input->GetLongName(&lname) == S_OK)
-				inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::New(_com_util::ConvertBSTRToString(lname)).ToLocalChecked());
+				inputArgs[Input::longName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(lname), v8::NewStringType::kNormal).ToLocalChecked();
 			else
-				inputObject->Set(context, Nan::New("longName").ToLocalChecked(), Nan::Undefined());
-
+				inputArgs[Input::longName] = Nan::Undefined();
+			
 			if(input->AreNamesDefault(&isDefault) == S_OK)
-				inputObject->Set(context, Nan::New("defaultNames").ToLocalChecked(), (isDefault) ? Nan::True() : Nan::False());
+				inputArgs[Input::defaultNames] = Nan::True();
 			else
-				inputObject->Set(context, Nan::New("defaultNames").ToLocalChecked(), Nan::Undefined());
-
+				inputArgs[Input::defaultNames] = Nan::False();
+			
 			if(input->IsProgramTallied(&prgmTallied) == S_OK)
-				inputObject->Set(context, Nan::New("programTallied").ToLocalChecked(), (prgmTallied) ? Nan::True() : Nan::False());
+				inputArgs[Input::programTallied] = Nan::True();
 			else
-				inputObject->Set(context, Nan::New("programTallied").ToLocalChecked(), Nan::Undefined());
-
+				inputArgs[Input::programTallied] = Nan::False();
+			
 			if(input->IsPreviewTallied(&prvwTallied) == S_OK)
-				inputObject->Set(context, Nan::New("previewTallied").ToLocalChecked(), (prvwTallied) ? Nan::True() : Nan::False());
+				inputArgs[Input::previewTallied] = Nan::True();
 			else
-				inputObject->Set(context, Nan::New("previewTallied").ToLocalChecked(), Nan::Undefined());
+				inputArgs[Input::previewTallied] = Nan::False();
 
 			if(input->GetAvailableExternalPortTypes(&externPortTypes) == S_OK) {
 				switch(externPortTypes) {
 				case bmdSwitcherExternalPortTypeSDI:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("SDI").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "SDI", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeHDMI:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("HDMI").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "HDMI", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeComponent:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Component").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Component", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeComposite:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Composite").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Composite", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeSVideo:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("SVideo").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "SVideo", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeInternal:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("Internal").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Internal", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeXLR:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("XLR").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "XLR", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeAESEBU:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("AESEBU").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "AESEBU", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeRCA:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("RCA").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "RCA", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeTSJack:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("TSJack").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "TSJack", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeMADI:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("MADI").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MADI", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherExternalPortTypeTRS:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::New("TRS").ToLocalChecked());
+					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "TRS", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				default:
-					inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::Undefined());
+					inputArgs[Input::externalPortType] = Nan::Undefined();
 				}
 			}
 			else
-				inputObject->Set(context, Nan::New("externalPortType").ToLocalChecked(), Nan::Undefined());
-
+				inputArgs[Input::externalPortType] = Nan::Undefined();
 
 			/**
 			 * TODO:
@@ -488,7 +476,11 @@ namespace ATEMSwitcherNode {
 			 */
 
 			//Create an instance of an Input
-			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), inputArgC, inputArgs).ToLocalChecked();
+			std::cout << "### Get inputs iteration ###" << std::endl;
+			inputObject = Nan::New(Input::constructor)->NewInstance(context, Input::inputArgc, inputArgs).ToLocalChecked();
+			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), Input::inputArgc, inputArgs).ToLocalChecked();
+
+			//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
 			
 			//Add to return array
 			inputArray->Set(context, inputArray->Length(), inputObject);

@@ -13,6 +13,20 @@ namespace ATEMSwitcherNode {
 		//Constructors
 		Input();
 
+		//Enums
+		enum inputArgValues {
+			id,
+			type,
+			availability,
+			shortName,
+			longName,
+			defaultNames,
+			previewTallied,
+			programTallied,
+			externalPortType,
+			inputArgc
+		};
+
 		//Node module
 		static NAN_MODULE_INIT(Init);
 		static NAN_METHOD(New);

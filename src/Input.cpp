@@ -20,7 +20,15 @@ namespace ATEMSwitcherNode {
 		//Class functions
 
 		//Class properties
-		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "foo", Nan::New("bar").ToLocalChecked());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "id", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "type", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "availability", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "shortName", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "longName", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "defaultNames", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "previewTallied", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "programTallied", Nan::Undefined());
+		InputNew->InstanceTemplate()->Set(target->GetIsolate(), "externalPortType", Nan::Undefined());
 
 		//Exports
 		constructor.Reset(Nan::GetFunction(InputNew).ToLocalChecked());

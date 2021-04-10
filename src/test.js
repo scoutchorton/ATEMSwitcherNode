@@ -34,6 +34,7 @@ let autoInterval = setInterval(() => {
 */
 
 //console.log(JSON.stringify(switcher.getInputs()).replace('[', '[\n').replace(']', '\n]').split('},{').join('},\n  {'));
+debugger;
 let inputs = switcher.getInputs();
 //console.log(inputs);
 let data = { 'prgm': '', 'prvw': '' }
