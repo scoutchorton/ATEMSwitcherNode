@@ -255,7 +255,6 @@ namespace ATEMSwitcherNode {
 		IBMDSwitcherInputIterator* inputIterator;
 		IBMDSwitcherInput* input;
 		v8::Local<v8::Array> inputArray;
-		v8::Local<v8::Object> inputObject;
 
 		//Get context of the funcation
 		context = info.GetIsolate()->GetCurrentContext();
@@ -303,6 +302,7 @@ namespace ATEMSwitcherNode {
 			BOOL prvwTallied;
 			BMDSwitcherExternalPortType externPortTypes;
 			v8::Local<v8::Value> inputArgs[Input::inputArgc];
+			v8::Local<v8::Object> inputObject;
 
 			//Create an instance of an Input
 			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), inputArgc, inputArgs).ToLocalChecked();
@@ -310,54 +310,53 @@ namespace ATEMSwitcherNode {
 			
 			//Get and apply attributes
 			//inputArgs[Input::id] = (input->GetInputId(&inputId) == S_OK) ? v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str()) : Nan::Undefined();
-			if(input->GetInputId(&inputId) == S_OK)
-				inputArgs[Input::id] = v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str(), v8::NewStringType::kNormal).ToLocalChecked();
-			else
-				inputArgs[Input::id] = Nan::Undefined();
 
+			inputArgs[Input::type] = Nan::Undefined();
+			std::cout << "Undefined: " << *v8::String::Utf8Value(info.GetIsolate(), inputArgs[Input::type]) << std::endl;
 			if(input->GetPortType(&portType) == S_OK) {
 				switch(portType) {
 				case bmdSwitcherPortTypeExternal:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "External", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "External", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeBlack:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Black", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "Black", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeColorBars:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorBars", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorBars", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeColorGenerator:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorGenerator", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "ColorGenerator", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMediaPlayerFill:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerFill", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerFill", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMediaPlayerCut:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerCut", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "MediaPlayerCut", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeSuperSource:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSource", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSource", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMixEffectBlockOutput:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlockOutput", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlockOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeAuxOutput:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutput", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeKeyCutOutput:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "CutOutput", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "CutOutput", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeMultiview:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "Multiview", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "Multiview", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				case bmdSwitcherPortTypeExternalDirect:
-					inputArgs[Input::externalPortType] = v8::String::NewFromUtf8(info.GetIsolate(), "ExternalDirect", v8::NewStringType::kNormal).ToLocalChecked();
+					inputArgs[Input::type] = v8::String::NewFromUtf8(info.GetIsolate(), "ExternalDirect", v8::NewStringType::kNormal).ToLocalChecked();
 					break;
 				default:
-					inputArgs[Input::externalPortType] = Nan::Undefined();
+					inputArgs[Input::type] = Nan::Undefined();
 				}
 			} else
-				inputArgs[Input::externalPortType] = Nan::Undefined();
+				inputArgs[Input::type] = Nan::Undefined();
+			std::cout << "Value after GetPortType: " << *v8::String::Utf8Value(info.GetIsolate(), inputArgs[Input::type]) << std::endl;
 
 			if(input->GetInputAvailability(&avail) == S_OK) {
 				switch(avail) {
@@ -399,31 +398,6 @@ namespace ATEMSwitcherNode {
 				}
 			} else
 				inputArgs[Input::availability] = Nan::Undefined();
-
-			if((input->GetShortName(&sname) == S_OK))
-				inputArgs[Input::shortName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(sname), v8::NewStringType::kNormal).ToLocalChecked();
-			else
-				inputArgs[Input::shortName] = Nan::Undefined();
-			
-			if(input->GetLongName(&lname) == S_OK)
-				inputArgs[Input::longName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(lname), v8::NewStringType::kNormal).ToLocalChecked();
-			else
-				inputArgs[Input::longName] = Nan::Undefined();
-			
-			if(input->AreNamesDefault(&isDefault) == S_OK)
-				inputArgs[Input::defaultNames] = Nan::True();
-			else
-				inputArgs[Input::defaultNames] = Nan::False();
-			
-			if(input->IsProgramTallied(&prgmTallied) == S_OK)
-				inputArgs[Input::programTallied] = Nan::True();
-			else
-				inputArgs[Input::programTallied] = Nan::False();
-			
-			if(input->IsPreviewTallied(&prvwTallied) == S_OK)
-				inputArgs[Input::previewTallied] = Nan::True();
-			else
-				inputArgs[Input::previewTallied] = Nan::False();
 
 			if(input->GetAvailableExternalPortTypes(&externPortTypes) == S_OK) {
 				switch(externPortTypes) {
@@ -470,17 +444,42 @@ namespace ATEMSwitcherNode {
 			else
 				inputArgs[Input::externalPortType] = Nan::Undefined();
 
+			if(input->GetInputId(&inputId) == S_OK)
+				inputArgs[Input::id] = v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str(), v8::NewStringType::kNormal).ToLocalChecked();
+			else
+				inputArgs[Input::id] = Nan::Undefined();
+
+			if((input->GetShortName(&sname) == S_OK))
+				inputArgs[Input::shortName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(sname), v8::NewStringType::kNormal).ToLocalChecked();
+			else
+				inputArgs[Input::shortName] = Nan::Undefined();
+			
+			if(input->GetLongName(&lname) == S_OK)
+				inputArgs[Input::longName] = v8::String::NewFromUtf8(info.GetIsolate(), _com_util::ConvertBSTRToString(lname), v8::NewStringType::kNormal).ToLocalChecked();
+			else
+				inputArgs[Input::longName] = Nan::Undefined();
+			
+			if(input->AreNamesDefault(&isDefault) == S_OK)
+				inputArgs[Input::defaultNames] = Nan::True();
+			else
+				inputArgs[Input::defaultNames] = Nan::False();
+			
+			if(input->IsProgramTallied(&prgmTallied) == S_OK)
+				inputArgs[Input::programTallied] = Nan::True();
+			else
+				inputArgs[Input::programTallied] = Nan::False();
+			
+			if(input->IsPreviewTallied(&prvwTallied) == S_OK)
+				inputArgs[Input::previewTallied] = Nan::True();
+			else
+				inputArgs[Input::previewTallied] = Nan::False();
+
 			/**
-			 * TODO:
-			 * ADD VALUES TO inputArgs TO THEN FORM AN INPUT OBJECT
+			 * TODO: APPLY DATA IN INPUT'S NEW METHOD
 			 */
 
 			//Create an instance of an Input
-			std::cout << "### Get inputs iteration ###" << std::endl;
 			inputObject = Nan::New(Input::constructor)->NewInstance(context, Input::inputArgc, inputArgs).ToLocalChecked();
-			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), Input::inputArgc, inputArgs).ToLocalChecked();
-
-			//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
 			
 			//Add to return array
 			inputArray->Set(context, inputArray->Length(), inputObject);

@@ -36,6 +36,10 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Input::New) {
+		/**
+		 * TODO: APPLY DATA IN INPUT'S NEW METHOD
+		 */
+
 		//Get context of function
 		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
 
