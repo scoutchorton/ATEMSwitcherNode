@@ -298,6 +298,7 @@ namespace ATEMSwitcherNode {
 			BMDSwitcherExternalPortType externPortTypes;
 			v8::Local<v8::Value> inputArgs[Input::inputArgc];
 			v8::Local<v8::Object> inputObject;
+			v8::Local<v8::Array> availArray;
 			
 			//Get and apply attributes
 			if(input->GetPortType(&portType) == S_OK) {
@@ -344,56 +345,32 @@ namespace ATEMSwitcherNode {
 			} else
 				inputArgs[Input::type] = Nan::Undefined();
 
+			availArray = v8::Array::New(info.GetIsolate());
 			if(input->GetInputAvailability(&avail) == S_OK) {
-				/**
-				 * TODO: Update to support the following statement from the SDK manual
-				 * 
-				 * The value returned can be bitwise-ANDed with any
-				 * BMDSwithcherInputAvailabilty value
-				 * (e.g. bmdSwitcherInputAvailabilityAuxOutputs) to determine
-				 * the availability of this input to that output group.
-				 * 
-				 * Create an array and add strings for each available option
-				 */
-				switch(avail) {
-				case bmdSwitcherInputAvailabilityMixEffectBlock0:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock0", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityMixEffectBlock1:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock1", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityMixEffectBlock2:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock2", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityMixEffectBlock3:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock3", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityAux1Output:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "Aux1Output", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityAux2Output:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "Aux2Output", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityAuxOutputs:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutputs", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityMultiView:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MultiView", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilitySuperSourceArt:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceArt", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilitySuperSourceBox:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceBox", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				case bmdSwitcherInputAvailabilityInputCut:
-					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "InputCut", v8::NewStringType::kNormal).ToLocalChecked();
-					break;
-				default:
-					inputArgs[Input::availability] = Nan::Undefined();
-				}
-			} else
-				inputArgs[Input::availability] = Nan::Undefined();
+				if(avail & bmdSwitcherInputAvailabilityMixEffectBlock0)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock0", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityMixEffectBlock1)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock1", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityMixEffectBlock2)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock2", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityMixEffectBlock3)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock3", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityAux1Output)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "Aux1Output", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityAux2Output)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "Aux2Output", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityAuxOutputs)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "AuxOutputs", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityMultiView)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "MultiView", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilitySuperSourceArt)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceArt", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilitySuperSourceBox)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "SuperSourceBox", v8::NewStringType::kNormal).ToLocalChecked());
+				if(avail & bmdSwitcherInputAvailabilityInputCut)
+					availArray->Set(context, availArray->Length(), v8::String::NewFromUtf8(info.GetIsolate(), "InputCut", v8::NewStringType::kNormal).ToLocalChecked());
+			}
+			inputArgs[Input::availability] = availArray;
 
 			if(input->GetAvailableExternalPortTypes(&externPortTypes) == S_OK) {
 				switch(externPortTypes) {
