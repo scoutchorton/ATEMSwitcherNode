@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#define DEBUG 1
+
 //https://medium.com/netscape/tutorial-building-native-c-modules-for-node-js-using-nan-part-1-755b07389c7c
 //https://v8docs.nodesource.com/node-12.19/d2/dc3/namespacev8.html
 
@@ -21,7 +23,7 @@ namespace ATEMSwitcherNode {
 		this->discovery = NULL;
 		this->switcher = NULL;
 		//this->mixBlockIterator = NULL;
-	};
+	}
 
 	NAN_MODULE_INIT(Switcher::Init) {
 		//Constructor
@@ -38,6 +40,7 @@ namespace ATEMSwitcherNode {
 
 		//Class properties
 		SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "address", Nan::New("129.168.10.240").ToLocalChecked());
+		//SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "inputs", v8::Local<v8::Array>());
 
 		//Exports
 		constructor.Reset(Nan::GetFunction(SwitcherNew).ToLocalChecked());
@@ -67,7 +70,7 @@ namespace ATEMSwitcherNode {
 		//Wrap and return object
 		switcher->Wrap(info.Holder());
 		info.GetReturnValue().Set(info.Holder());
-	};
+	}
 
 	NAN_METHOD(Switcher::Connect) {
 		//Variables
@@ -94,7 +97,7 @@ namespace ATEMSwitcherNode {
 
 		//Get values from JS class
 		addressValue = thisSwitcher->handle()->Get(context, Nan::New("address").ToLocalChecked()).ToLocalChecked();
-		addressString = std::string(std::string(*v8::String::Utf8Value(info.GetIsolate(), addressValue)));
+		addressString = std::string(*v8::String::Utf8Value(info.GetIsolate(), addressValue));
 
 
 		//Attempt to connect to switcher
@@ -117,7 +120,6 @@ namespace ATEMSwitcherNode {
 				return Nan::ThrowError("Connection Failure: Unknown reason for failure.");
 			}
 		}
-
 
 		//End code
 		std::cout << "Successfully connected to switcher!" << std::endl;
@@ -247,7 +249,6 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::GetInputs) {
-
 		//Variables
 		v8::Local<v8::Context> context;
 		Switcher* thisSwitcher;
@@ -277,11 +278,6 @@ namespace ATEMSwitcherNode {
 			}
 		}
 
-		/**
-		 * Iterate over all inputs, and make a JS array to store information about them.
-		 * Make a custom class for inputs?
-		 */
-
 		 //Iterate over inputs and get names
 		result = inputIterator->Next(&input);
 		if(result == E_POINTER)
@@ -289,7 +285,6 @@ namespace ATEMSwitcherNode {
 
 		//Add names to inputArray
 		inputArray = v8::Array::New(info.GetIsolate());
-
 		for(; result != S_FALSE; result = inputIterator->Next(&input)) {
 			//Initalize variables
 			BMDSwitcherInputId inputId;
@@ -303,16 +298,8 @@ namespace ATEMSwitcherNode {
 			BMDSwitcherExternalPortType externPortTypes;
 			v8::Local<v8::Value> inputArgs[Input::inputArgc];
 			v8::Local<v8::Object> inputObject;
-
-			//Create an instance of an Input
-			//inputObject = Nan::NewInstance(Nan::New(Input::constructor), inputArgc, inputArgs).ToLocalChecked();
-			//inputObject = v8::Object::New(info.GetIsolate());
 			
 			//Get and apply attributes
-			//inputArgs[Input::id] = (input->GetInputId(&inputId) == S_OK) ? v8::String::NewFromUtf8(info.GetIsolate(), std::to_string(inputId).c_str()) : Nan::Undefined();
-
-			inputArgs[Input::type] = Nan::Undefined();
-			std::cout << "Undefined: " << *v8::String::Utf8Value(info.GetIsolate(), inputArgs[Input::type]) << std::endl;
 			if(input->GetPortType(&portType) == S_OK) {
 				switch(portType) {
 				case bmdSwitcherPortTypeExternal:
@@ -356,9 +343,18 @@ namespace ATEMSwitcherNode {
 				}
 			} else
 				inputArgs[Input::type] = Nan::Undefined();
-			std::cout << "Value after GetPortType: " << *v8::String::Utf8Value(info.GetIsolate(), inputArgs[Input::type]) << std::endl;
 
 			if(input->GetInputAvailability(&avail) == S_OK) {
+				/**
+				 * TODO: Update to support the following statement from the SDK manual
+				 * 
+				 * The value returned can be bitwise-ANDed with any
+				 * BMDSwithcherInputAvailabilty value
+				 * (e.g. bmdSwitcherInputAvailabilityAuxOutputs) to determine
+				 * the availability of this input to that output group.
+				 * 
+				 * Create an array and add strings for each available option
+				 */
 				switch(avail) {
 				case bmdSwitcherInputAvailabilityMixEffectBlock0:
 					inputArgs[Input::availability] = v8::String::NewFromUtf8(info.GetIsolate(), "MixEffectBlock0", v8::NewStringType::kNormal).ToLocalChecked();
@@ -440,8 +436,7 @@ namespace ATEMSwitcherNode {
 				default:
 					inputArgs[Input::externalPortType] = Nan::Undefined();
 				}
-			}
-			else
+			} else
 				inputArgs[Input::externalPortType] = Nan::Undefined();
 
 			if(input->GetInputId(&inputId) == S_OK)
@@ -459,24 +454,20 @@ namespace ATEMSwitcherNode {
 			else
 				inputArgs[Input::longName] = Nan::Undefined();
 			
-			if(input->AreNamesDefault(&isDefault) == S_OK)
+			if(input->AreNamesDefault(&isDefault) == S_OK && isDefault)
 				inputArgs[Input::defaultNames] = Nan::True();
 			else
 				inputArgs[Input::defaultNames] = Nan::False();
 			
-			if(input->IsProgramTallied(&prgmTallied) == S_OK)
+			if(input->IsProgramTallied(&prgmTallied) == S_OK && prgmTallied)
 				inputArgs[Input::programTallied] = Nan::True();
 			else
 				inputArgs[Input::programTallied] = Nan::False();
 			
-			if(input->IsPreviewTallied(&prvwTallied) == S_OK)
+			if(input->IsPreviewTallied(&prvwTallied) == S_OK && prvwTallied)
 				inputArgs[Input::previewTallied] = Nan::True();
 			else
 				inputArgs[Input::previewTallied] = Nan::False();
-
-			/**
-			 * TODO: APPLY DATA IN INPUT'S NEW METHOD
-			 */
 
 			//Create an instance of an Input
 			inputObject = Nan::New(Input::constructor)->NewInstance(context, Input::inputArgc, inputArgs).ToLocalChecked();
@@ -488,8 +479,6 @@ namespace ATEMSwitcherNode {
 
 		//End code
 		info.GetReturnValue().Set(inputArray);
-		//inputObject = Nan::NewInstance(Nan::New(Input::constructor)).ToLocalChecked();
-		//info.GetReturnValue().Set(inputObject);
 	}
 
 	NODE_MODULE(ATEMSwitcherNode, Init);

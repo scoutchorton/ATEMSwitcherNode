@@ -7,9 +7,7 @@
 namespace ATEMSwitcherNode {
 	Nan::Persistent<v8::Function> Input::constructor;
 
-	Input::Input() {
-
-	}
+	Input::Input() {}
 
 	NAN_MODULE_INIT(Input::Init) {
 		//Constructor
@@ -36,10 +34,6 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Input::New) {
-		/**
-		 * TODO: APPLY DATA IN INPUT'S NEW METHOD
-		 */
-
 		//Get context of function
 		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
 
@@ -49,6 +43,45 @@ namespace ATEMSwitcherNode {
 		//Only allow constructing of class
 		if(!info.IsConstructCall())
 			return Nan::ThrowError("Please use the 'new' operator.");
+
+		//Check for argument count
+		if(info.Length() != Input::inputArgc)
+			return Nan::ThrowError("Not enough arguments provided.");
+
+		//Apply parameters to instance
+		for(int index = 0; index < inputArgc; index++) {
+			switch(index) {
+			case Input::id:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "id", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::type:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "type", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::availability:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "availability", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::shortName:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "shortName", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::longName:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "longName", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::defaultNames:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "defaultNames", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::previewTallied:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "previewTallied", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::programTallied:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "programTallied", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			case Input::externalPortType:
+				info.Holder()->Set(context, v8::String::NewFromUtf8(info.GetIsolate(), "externalPortType", v8::NewStringType::kNormal).ToLocalChecked(), info[index]);
+				break;
+			default:
+				return Nan::ThrowError("Inavlid argument.");
+			}
+		}
 		
 		//Wrap and return object
 		input->Wrap(info.Holder());
