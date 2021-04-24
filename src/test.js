@@ -8,5 +8,7 @@ switcher.address = "192.168.100.155";
 switcher.connect();
 
 console.log("Getting inputs...");
-let inputs = switcher.getInputs();
-console.log(inputs);
+let inputs
+console.log(JSON.stringify(inputs), "\n", JSON.stringify(switcher.inputs));
+inputs = switcher.getInputs();
+console.log(JSON.stringify(inputs), "\n", JSON.stringify(switcher.inputs));

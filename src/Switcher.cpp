@@ -40,7 +40,7 @@ namespace ATEMSwitcherNode {
 
 		//Class properties
 		SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "address", Nan::New("129.168.10.240").ToLocalChecked());
-		//SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "inputs", v8::Local<v8::Array>());
+		SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "inputs", Nan::Undefined());
 
 		//Exports
 		constructor.Reset(Nan::GetFunction(SwitcherNew).ToLocalChecked());
@@ -66,6 +66,10 @@ namespace ATEMSwitcherNode {
 		HRESULT instanceResult = CoCreateInstance(CLSID_CBMDSwitcherDiscovery, NULL, CLSCTX_ALL, IID_IBMDSwitcherDiscovery, (void**)&switcher->discovery);
 		if(FAILED(instanceResult))
 			return Nan::ThrowError("Failed to initalize switcher discovery.");
+
+		//Setup inputs array
+		//v8::Local<v8::Array> inputArray = v8::Array::New(info.GetIsolate());
+		//switcher->handle()->Set(context, Nan::New("inputs"), inputArray);
 
 		//Wrap and return object
 		switcher->Wrap(info.Holder());
@@ -121,8 +125,10 @@ namespace ATEMSwitcherNode {
 			}
 		}
 
+		//Automagically populate inputs array
+		//v8::Local<v8::Function>::Cast(thisSwitcher->handle()->Get(context, Nan::New("GetInputs").ToLocalChecked()).ToLocalChecked())->Call(context, Nan::Undefined(), 0, NULL);
+
 		//End code
-		std::cout << "Successfully connected to switcher!" << std::endl;
 		info.GetReturnValue().Set(Nan::True());
 	};
 
@@ -256,6 +262,9 @@ namespace ATEMSwitcherNode {
 		IBMDSwitcherInputIterator* inputIterator;
 		IBMDSwitcherInput* input;
 		v8::Local<v8::Array> inputArray;
+		v8::Local<v8::Value> switcherInputArray;
+		//v8::Local<v8::Value> inputArray;
+		int inputIndex;
 
 		//Get context of the funcation
 		context = info.GetIsolate()->GetCurrentContext();
@@ -283,9 +292,16 @@ namespace ATEMSwitcherNode {
 		if(result == E_POINTER)
 			return Nan::ThrowError("Input Iteration: Invalid pointer.");
 
+		//Set up array object
+		//inputArray = v8::Array::New(info.GetIsolate());
+		//inputArray = thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked();
+		if(thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked()->IsArray())
+			inputArray = v8::Local<v8::Array>::Cast(thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked());
+		else
+			inputArray = v8::Array::New(info.GetIsolate());
+
 		//Add names to inputArray
-		inputArray = v8::Array::New(info.GetIsolate());
-		for(; result != S_FALSE; result = inputIterator->Next(&input)) {
+		for(inputIndex = 0; result != S_FALSE; result = inputIterator->Next(&input), inputIndex++) {
 			//Initalize variables
 			BMDSwitcherInputId inputId;
 			BMDSwitcherPortType portType;
@@ -450,11 +466,11 @@ namespace ATEMSwitcherNode {
 			inputObject = Nan::New(Input::constructor)->NewInstance(context, Input::inputArgc, inputArgs).ToLocalChecked();
 			
 			//Add to return array
-			inputArray->Set(context, inputArray->Length(), inputObject);
+			inputArray->Set(context, inputIndex, inputObject);
 		}
 
-
 		//End code
+		thisSwitcher->handle()->Set(context, Nan::New("inputs").ToLocalChecked(), inputArray);
 		info.GetReturnValue().Set(inputArray);
 	}
 
