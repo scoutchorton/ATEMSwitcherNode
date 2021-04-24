@@ -40,6 +40,7 @@ namespace ATEMSwitcherNode {
 		Nan::SetPrototypeMethod(SwitcherNew, "fadeToBlack", FadeToBlack);
 		Nan::SetPrototypeMethod(SwitcherNew, "getInputs", GetInputs);
 		Nan::SetPrototypeMethod(SwitcherNew, "setPreview", SetPreview);
+		Nan::SetPrototypeMethod(SwitcherNew, "setProgram", SetProgram);
 
 		//Class properties
 		SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "address", Nan::New("129.168.10.240").ToLocalChecked());
@@ -102,7 +103,7 @@ namespace ATEMSwitcherNode {
 			if(info[0]->IsString())
 				thisSwitcher->handle()->Set(context, Nan::New("address").ToLocalChecked(), info[0]);
 			else
-				return Nan::ThrowError("Expected a string for an address.");
+				return Nan::ThrowTypeError("Expected a string for an address.");
 		}
 
 		//Get values from JS class
@@ -489,8 +490,113 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::SetPreview) {
+		v8::Local<v8::Context> context;
+		Switcher* thisSwitcher;
+		v8::Local<v8::Object> thisInput;
+		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
+		HRESULT iteratorResult;
+		IBMDSwitcherMixEffectBlock* mixBlock;
+		HRESULT mixBlockResult;
+		HRESULT setPrevInp;
+
+		//Get context of function
+		context = info.GetIsolate()->GetCurrentContext();
+
+		//Get Switcher instance
+		thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+
+		//Check for arguments
+		if(info.Length() == 0)
+			return Nan::ThrowTypeError("Switcher.setPreview requires 1 argument, but only 0 were passed.");
+		if(!info[0]->InstanceOf(context, Nan::New(Input::constructor)).FromJust())
+			return Nan::ThrowTypeError("Expected an Input argument.");
+
+		//Grab Input as an object
+		thisInput = info[0]->ToObject(context).ToLocalChecked();
+
+		//Create mix block iterator if not existant
+		iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
+		if(FAILED(iteratorResult)) {
+			switch(iteratorResult) {
+			case E_POINTER:
+				return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
+			case E_OUTOFMEMORY:
+				return Nan::ThrowError("Mix Block Iterator: Not enough memory.");
+			case E_NOINTERFACE:
+				return Nan::ThrowError("Mix Block Iterator: Interface not found.");
+			default:
+				return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
+			}
+		}
+
+		//Create mix effect block
+		mixBlock = NULL;
+		mixBlockResult = mixBlockIterator->Next(&mixBlock);
+		if(FAILED(mixBlockResult))
+			return Nan::ThrowError("Mix Effect Block: Failed to create.");
+
+		//Actually change input
+		setPrevInp = mixBlock->SetPreviewInput(thisInput->Get(context, Nan::New("id").ToLocalChecked()).ToLocalChecked()->ToInteger(context).ToLocalChecked()->Value());
+		if(FAILED(setPrevInp))
+			return Nan::ThrowError("Set Preview Input: Failed to change preview input.");
+
 		//End code
-		info.GetReturnValue().Set(Nan::Undefined());
+		info.GetReturnValue().Set(Nan::True());
+	}
+
+	NAN_METHOD(Switcher::SetProgram) {
+		v8::Local<v8::Context> context;
+		Switcher* thisSwitcher;
+		v8::Local<v8::Object> thisInput;
+		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
+		HRESULT iteratorResult;
+		IBMDSwitcherMixEffectBlock* mixBlock;
+		HRESULT mixBlockResult;
+		HRESULT setProgInp;
+
+		//Get context of function
+		context = info.GetIsolate()->GetCurrentContext();
+
+		//Get Switcher instance
+		thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+
+		//Check for arguments
+		if(info.Length() == 0)
+			return Nan::ThrowTypeError("Switcher.setPreview requires 1 argument, but only 0 were passed.");
+		if(!info[0]->InstanceOf(context, Nan::New(Input::constructor)).FromJust())
+			return Nan::ThrowTypeError("Expected an Input argument.");
+
+		//Grab Input as an object
+		thisInput = info[0]->ToObject(context).ToLocalChecked();
+
+		//Create mix block iterator if not existant
+		iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
+		if(FAILED(iteratorResult)) {
+			switch(iteratorResult) {
+			case E_POINTER:
+				return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
+			case E_OUTOFMEMORY:
+				return Nan::ThrowError("Mix Block Iterator: Not enough memory.");
+			case E_NOINTERFACE:
+				return Nan::ThrowError("Mix Block Iterator: Interface not found.");
+			default:
+				return Nan::ThrowError("Mix Block Iterator: Invalid pointer.");
+			}
+		}
+
+		//Create mix effect block
+		mixBlock = NULL;
+		mixBlockResult = mixBlockIterator->Next(&mixBlock);
+		if(FAILED(mixBlockResult))
+			return Nan::ThrowError("Mix Effect Block: Failed to create.");
+
+		//Actually change input
+		setProgInp = mixBlock->SetProgramInput(thisInput->Get(context, Nan::New("id").ToLocalChecked()).ToLocalChecked()->ToInteger(context).ToLocalChecked()->Value());
+		if(FAILED(setProgInp))
+			return Nan::ThrowError("Set Preview Input: Failed to change preview input.");
+
+		//End code
+		info.GetReturnValue().Set(Nan::True());
 	}
 
 	NODE_MODULE(ATEMSwitcherNode, Init);

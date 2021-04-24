@@ -31,6 +31,7 @@ namespace ATEMSwitcherNode {
 		//Input handling
 		static NAN_METHOD(GetInputs);
 		static NAN_METHOD(SetPreview);
+		static NAN_METHOD(SetProgram);
 
 	private:
 		IBMDSwitcherDiscovery* discovery;
