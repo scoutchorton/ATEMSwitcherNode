@@ -10,8 +10,10 @@ namespace ATEMSwitcherNode {
 	Input::Input() {}
 
 	NAN_MODULE_INIT(Input::Init) {
+		v8::Local<v8::FunctionTemplate> InputNew;
+
 		//Constructor
-		v8::Local<v8::FunctionTemplate> InputNew = Nan::New<v8::FunctionTemplate>(New);
+		InputNew = Nan::New<v8::FunctionTemplate>(New);
 		InputNew->SetClassName(Nan::New("Input").ToLocalChecked());
 		InputNew->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -34,11 +36,14 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Input::New) {
+		v8::Local<v8::Context> context;
+		Input* input;
+
 		//Get context of function
-		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+		context = info.GetIsolate()->GetCurrentContext();
 
 		//Create instance of class
-		Input* input = new Input();
+		input = new Input();
 
 		//Only allow constructing of class
 		if(!info.IsConstructCall())

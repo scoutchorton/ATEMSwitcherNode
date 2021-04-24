@@ -28,8 +28,9 @@ namespace ATEMSwitcherNode {
 		static NAN_METHOD(Cut);
 		static NAN_METHOD(FadeToBlack);
 
-		//Util
+		//Input handling
 		static NAN_METHOD(GetInputs);
+		static NAN_METHOD(SetPreview);
 
 	private:
 		IBMDSwitcherDiscovery* discovery;

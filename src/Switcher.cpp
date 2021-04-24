@@ -26,8 +26,10 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_MODULE_INIT(Switcher::Init) {
+		v8::Local<v8::FunctionTemplate> SwitcherNew;
+
 		//Constructor
-		v8::Local<v8::FunctionTemplate> SwitcherNew = Nan::New<v8::FunctionTemplate>(New);
+		SwitcherNew = Nan::New<v8::FunctionTemplate>(New);
 		SwitcherNew->SetClassName(Nan::New("Switcher").ToLocalChecked());
 		SwitcherNew->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -37,6 +39,7 @@ namespace ATEMSwitcherNode {
 		Nan::SetPrototypeMethod(SwitcherNew, "cut", Cut);
 		Nan::SetPrototypeMethod(SwitcherNew, "fadeToBlack", FadeToBlack);
 		Nan::SetPrototypeMethod(SwitcherNew, "getInputs", GetInputs);
+		Nan::SetPrototypeMethod(SwitcherNew, "setPreview", SetPreview);
 
 		//Class properties
 		SwitcherNew->InstanceTemplate()->Set(target->GetIsolate(), "address", Nan::New("129.168.10.240").ToLocalChecked());
@@ -48,11 +51,15 @@ namespace ATEMSwitcherNode {
 	};
 
 	NAN_METHOD(Switcher::New) {
+		v8::Local<v8::Context> context;
+		Switcher* switcher;
+		HRESULT instanceResult;
+
 		//Get context of function
-		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+		context = info.GetIsolate()->GetCurrentContext();
 
 		//Create instance of class
-		Switcher* switcher = new Switcher();
+		switcher = new Switcher();
 
 		//Only allow as 'new Switcher()' and not 'Switcher()'
 		if(!info.IsConstructCall())
@@ -63,7 +70,7 @@ namespace ATEMSwitcherNode {
 			return Nan::ThrowError("Failed to initalize COM instance.");
 
 		//Initalize Switcher Discovery
-		HRESULT instanceResult = CoCreateInstance(CLSID_CBMDSwitcherDiscovery, NULL, CLSCTX_ALL, IID_IBMDSwitcherDiscovery, (void**)&switcher->discovery);
+		instanceResult = CoCreateInstance(CLSID_CBMDSwitcherDiscovery, NULL, CLSCTX_ALL, IID_IBMDSwitcherDiscovery, (void**)&switcher->discovery);
 		if(FAILED(instanceResult))
 			return Nan::ThrowError("Failed to initalize switcher discovery.");
 
@@ -77,7 +84,6 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::Connect) {
-		//Variables
 		v8::Local<v8::Context> context;
 		Switcher* thisSwitcher;
 		v8::Local<v8::Value> addressValue;
@@ -133,15 +139,22 @@ namespace ATEMSwitcherNode {
 	};
 
 	NAN_METHOD(Switcher::Auto) {
+		v8::Local<v8::Context> context;
+		Switcher* thisSwitcher;
+		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
+		HRESULT iteratorResult;
+		IBMDSwitcherMixEffectBlock* mixBlock;
+		HRESULT mixBlockResult;
+		HRESULT autoResult;
+
 		//Get context of function
-		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+		context = info.GetIsolate()->GetCurrentContext();
 
 		//Get Switcher instance
-		Switcher* thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+		thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
 
 		//Create mix block iterator if not existant
-		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
-		HRESULT iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
+		iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
 		if(FAILED(iteratorResult)) {
 			switch(iteratorResult) {
 			case E_POINTER:
@@ -156,13 +169,13 @@ namespace ATEMSwitcherNode {
 		}
 
 		//Create mix effect block
-		IBMDSwitcherMixEffectBlock* mixBlock = NULL;
-		HRESULT mixBlockResult = mixBlockIterator->Next(&mixBlock);
+		mixBlock = NULL;
+		mixBlockResult = mixBlockIterator->Next(&mixBlock);
 		if(FAILED(mixBlockResult))
 			return Nan::ThrowError("Mix Effect Block: Failed to create.");
 
 		//Do transition
-		HRESULT autoResult = mixBlock->PerformAutoTransition();
+		autoResult = mixBlock->PerformAutoTransition();
 		if(FAILED(autoResult))
 			return Nan::ThrowError("Auto Transition: Failed to perform transition.");
 
@@ -171,7 +184,6 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::Cut) {
-		//Variables
 		v8::Local<v8::Context> context;
 		Switcher* thisSwitcher;
 		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
@@ -217,15 +229,22 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::FadeToBlack) {
+		v8::Local<v8::Context> context;
+		Switcher* thisSwitcher;
+		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
+		HRESULT iteratorResult;
+		IBMDSwitcherMixEffectBlock* mixBlock;
+		HRESULT mixBlockResult;
+		HRESULT autoResult;
+
 		//Get context of function
-		v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+		context = info.GetIsolate()->GetCurrentContext();
 
 		//Get Switcher instance
-		Switcher* thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
+		thisSwitcher = Nan::ObjectWrap::Unwrap<Switcher>(info.This());
 
 		//Create mix block iterator if not existant
-		IBMDSwitcherMixEffectBlockIterator* mixBlockIterator;
-		HRESULT iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
+		iteratorResult = thisSwitcher->switcher->CreateIterator(IID_IBMDSwitcherMixEffectBlockIterator, (LPVOID*)&mixBlockIterator);
 		if(FAILED(iteratorResult)) {
 			switch(iteratorResult) {
 			case E_POINTER:
@@ -240,13 +259,13 @@ namespace ATEMSwitcherNode {
 		}
 
 		//Create mix effect block
-		IBMDSwitcherMixEffectBlock* mixBlock = NULL;
-		HRESULT mixBlockResult = mixBlockIterator->Next(&mixBlock);
+		mixBlock = NULL;
+		mixBlockResult = mixBlockIterator->Next(&mixBlock);
 		if(FAILED(mixBlockResult))
 			return Nan::ThrowError("Mix Effect Block: Failed to create.");
 
 		//Do transition
-		HRESULT autoResult = mixBlock->PerformFadeToBlack();
+		autoResult = mixBlock->PerformFadeToBlack();
 		if(FAILED(autoResult))
 			return Nan::ThrowError("Fade to Black: Failed to perform fade to black.");
 
@@ -255,7 +274,6 @@ namespace ATEMSwitcherNode {
 	}
 
 	NAN_METHOD(Switcher::GetInputs) {
-		//Variables
 		v8::Local<v8::Context> context;
 		Switcher* thisSwitcher;
 		HRESULT result;
@@ -263,7 +281,6 @@ namespace ATEMSwitcherNode {
 		IBMDSwitcherInput* input;
 		v8::Local<v8::Array> inputArray;
 		v8::Local<v8::Value> switcherInputArray;
-		//v8::Local<v8::Value> inputArray;
 		int inputIndex;
 
 		//Get context of the funcation
@@ -293,8 +310,6 @@ namespace ATEMSwitcherNode {
 			return Nan::ThrowError("Input Iteration: Invalid pointer.");
 
 		//Set up array object
-		//inputArray = v8::Array::New(info.GetIsolate());
-		//inputArray = thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked();
 		if(thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked()->IsArray())
 			inputArray = v8::Local<v8::Array>::Cast(thisSwitcher->handle()->Get(context, Nan::New("inputs").ToLocalChecked()).ToLocalChecked());
 		else
@@ -302,7 +317,6 @@ namespace ATEMSwitcherNode {
 
 		//Add names to inputArray
 		for(inputIndex = 0; result != S_FALSE; result = inputIterator->Next(&input), inputIndex++) {
-			//Initalize variables
 			BMDSwitcherInputId inputId;
 			BMDSwitcherPortType portType;
 			BMDSwitcherInputAvailability avail;
@@ -472,6 +486,11 @@ namespace ATEMSwitcherNode {
 		//End code
 		thisSwitcher->handle()->Set(context, Nan::New("inputs").ToLocalChecked(), inputArray);
 		info.GetReturnValue().Set(inputArray);
+	}
+
+	NAN_METHOD(Switcher::SetPreview) {
+		//End code
+		info.GetReturnValue().Set(Nan::Undefined());
 	}
 
 	NODE_MODULE(ATEMSwitcherNode, Init);
