@@ -16,8 +16,8 @@
   "author": "scoutchorton",
   "license": "ISC",
   "gypfile": true,
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "nan": "^2.14.2"
-  }
+  },
+  "devDependencies": {}
 }
